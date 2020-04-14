@@ -1,3 +1,27 @@
-0.4: new note
+0.4: new note:
+
+Form submit event: Broswer ----> Server (HTTP POST to server address: new_note)
+HTTP Status Code: 302 - URL redirect: Server -----> Broswer (HTTP GET request - location: /notes)
+                            (Broswer reloads "Notes" page)
+HTTP requests: (main.css), (main.js),(data.json) Browser ----> Server
+
+
+0.5: single app page:
+
+Form submit event: Broswer ----> Server (HTTP POST request to server address: new_note_spa with JSON data containing content and time stamp)
+HTTP Status Code: 201 - URL redirect: Server -----> Broswer
+
+
+0.6: New note:
+
+Form submit event: Broswer ----> Server (HTTP POST request to server address: new_note_spa with JSON data containing content and time stamp)
+HTTP Status Code: 201 - URL redirect: Server -----> Broswer
+
+New note: "yesssss"
+
+
+
+
+
 
 
