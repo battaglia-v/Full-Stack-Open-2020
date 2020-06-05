@@ -14,8 +14,7 @@ const Notification = ({ message }) => {
     )
     }
 
-    if (message.includes('Error') || message.includes('Deleted')) {
-
+    else {
         return (
             <div className="errorMessage">
                 {message}
