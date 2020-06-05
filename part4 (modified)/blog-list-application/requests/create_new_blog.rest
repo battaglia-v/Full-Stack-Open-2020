@@ -1,0 +1,10 @@
+POST http://localhost:3003/api/blogs
+Content-Type: application/json
+
+{
+    "title": "How to be a better programmer",
+    "author": "Vincent Battaglia",
+    "url": "www.google.com",
+    "likes": 25
+}
+
