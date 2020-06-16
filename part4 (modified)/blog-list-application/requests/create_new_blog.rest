@@ -1,10 +1,11 @@
-POST http://localhost:3003/api/blogs
+POST http://localhost:3001/api/blogs
 Content-Type: application/json
-
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJlbm55IiwiaWQiOiI1ZWU3YWRhMjJlOTRiZTEzZDhiMmQ4ODIiLCJpYXQiOjE1OTIyNjE4MTJ9.N2a4gpMr6qvuOPNOFgbXe5yfz_7u7CFS_ZsTZD5resg
 {
-    "title": "Puppeteer: What can I do?",
-    "author": "Google Developers",
-    "url": "https://developers.google.com/web/tools/puppeteer",
-    "likes": 150
+    "title": "Seriously Cool",
+    "author": "Sandy Cooke",
+    "url": "https://developers.go4565456ols/puppeteer",
+    "likes":27,
+    "userId": "5ee7ada22e94be13d8b2d882"
 }
 
