@@ -109,15 +109,17 @@ describe('viewing a specific blog post', () => {
 
   test.only('likes property defaults to 0 when missing from request', async () => {
     const blogObject = new Blog({
-      title: 'Why you should learn React',
-      author: 'Shawn Blake',
-      url: 'www.math.com',
+      title: 'Here is a new blog post',
+      author: 'Sally Smith',
+      url: 'www.reddit.com'
     })
-
-   const response = await api.post('/api/blogs').send(blogObject)
-
-    expect(response.body.likes).toBe(0)
+    
+    const newBlog = await api.post('/api/blogs').send(blogObject)
+    console.log(newBlog)
+     
+    expect(newBlog.body).toHaveProperty('likes', 0)
   })
+
 
   test('If title and url are missing, respond with status code 400', async () => {
     const blogObject = new Blog({
@@ -127,6 +129,7 @@ describe('viewing a specific blog post', () => {
 
     const response = await api.post('/api/blogs').send(blogObject)
     expect(response.status).toBe(400)
+
   })
 
   test('If the likes count is changed, update the database with the changed amount', async () => {
@@ -149,8 +152,8 @@ describe('viewing a specific blog post', () => {
     const blogsAtEnd = await blogsInDb()
     
     const updatedBlog = blogsAtEnd.map(b => b.likes)
-
-    expect(updatedBlog).toContain(20)
+     
+    expect(updatedBlog[0]).toContain(20)
   })
 })
 
