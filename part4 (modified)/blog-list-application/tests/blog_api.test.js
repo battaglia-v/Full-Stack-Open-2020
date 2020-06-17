@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
+const jwt = require('jsonwebtoken')
 const app = require('../app')
 
 const api = supertest(app)
@@ -56,17 +57,14 @@ const usersInDb = async () => {
   return users.map((u) => u.toJSON())
 }
 
-
 beforeEach(async () => {
   await Blog.deleteMany({})
 
   let blogObject = new Blog(initialBlogs[0])
   await blogObject.save()
-  console.log(blogObject)
 
   blogObject = new Blog(initialBlogs[1])
   await blogObject.save()
-  console.log(blogObject)
 })
 
 describe('when there are initially blog posts saved', () => {
@@ -88,11 +86,10 @@ describe('viewing a specific blog post', () => {
   test('blog contains an id', async () => {
     const response = await api.get('/api/blogs')
 
-    console.log(response.body._id)
+  
     expect(response.body._id).toBeDefined
   })
 
-  test('succeeds with a valid id', async () => {})
 
   test('a new blog post is saved', async () => {
     const blogObject = new Blog({
@@ -102,22 +99,31 @@ describe('viewing a specific blog post', () => {
       likes: 12,
     })
 
-    await api.post('/api/blogs').send(blogObject)
+    await api
+      .post('/api/blogs')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJlbm55IiwiaWQiOiI1ZWU3YWRhMjJlOTRiZTEzZDhiMmQ4ODIiLCJpYXQiOjE1OTIzNTYzNDJ9.uEIHj1TsngBIKuZlRA25_ijf9yU0QYy61BKs0cCtmio')
+      .send(blogObject)
 
     expect(Blog).toHaveLength(3)
   })
 
-  test.only('likes property defaults to 0 when missing from request', async () => {
-    const blogObject = new Blog({
+  test('likes property defaults to 0 when missing from request', async () => {
+    const blogObject = new Blog ({
       title: 'Here is a new blog post',
       author: 'Sally Smith',
-      url: 'www.reddit.com'
+      url: 'www.reddit.com',
     })
     
-    const newBlog = await api.post('/api/blogs').send(blogObject)
-    console.log(newBlog)
-     
-    expect(newBlog.body).toHaveProperty('likes', 0)
+    const response = await api
+      .post('/api/blogs')
+      .set(
+        'Authorization',
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJlbm55IiwiaWQiOiI1ZWU3YWRhMjJlOTRiZTEzZDhiMmQ4ODIiLCJpYXQiOjE1OTIzNTYzNDJ9.uEIHj1TsngBIKuZlRA25_ijf9yU0QYy61BKs0cCtmio'
+      )
+      .set('Content-Type', 'application/json')
+      .send(blogObject)
+    
+    expect(response.body.likes).toBe(0)
   })
 
 
@@ -131,51 +137,49 @@ describe('viewing a specific blog post', () => {
     expect(response.status).toBe(400)
 
   })
-
-  test('If the likes count is changed, update the database with the changed amount', async () => {
-    
-    const blogsAtStart = await blogsInDb()
-    const blogToUpdate = blogsAtStart[1]
-
-    const blogObject = ({
-      title: 'REACT is a great framework for creating single-page apps like Facebook',
-      author: 'Lamar Williams',
-      url: 'www.facebook.com',
-      likes: 20,
-    })
-
-    await api
-      .put(`/api/blogs/${blogToUpdate.id}`)
-      .send(blogObject)
-      .expect(200)
-
-    const blogsAtEnd = await blogsInDb()
-    
-    const updatedBlog = blogsAtEnd.map(b => b.likes)
-     
-    expect(updatedBlog[0]).toContain(20)
-  })
 })
 
+test('If the likes count is changed, update the database with the changed amount', async () => {
+    
+  const blogs = await blogsInDb()
+  const blogToReplace = blogs[0]
+  const newLikes = { ...blogToReplace, likes: 9999 }
+
+  await api
+    .put(`/api/blogs/${blogToReplace.id}`)
+    .set(
+      'Authorization',
+      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJlbm55IiwiaWQiOiI1ZWU3YWRhMjJlOTRiZTEzZDhiMmQ4ODIiLCJpYXQiOjE1OTIzNTYzNDJ9.uEIHj1TsngBIKuZlRA25_ijf9yU0QYy61BKs0cCtmio'
+    )
+    .send(newLikes)
+    .expect(200)
+
+  const blogsAtEnd = await blogsInDb()
+  const replacedBlog = blogsAtEnd.filter((b) => b.id === blogToReplace.id)[0]
+  expect(replacedBlog.likes).toBe(newLikes.likes)
+     
+})
+
+
+
 describe('deletion of a blog', () => {
-  test('making a request with wrong id retuns 400', async () => {
+  test('succeeds with status code 204 if the ID is valid', async () => {
+    const blogsAtStart = await blogsInDb()
+    const blogToDelete = blogsAtStart[0]
+      
     await api
-      .delete('/api/blogs/1')
-      .expect(400)
-      .expect('Content-Type', /application\/json/)
-  })
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
 
-  test('deleting a post works correctly', async () => {
-    const blogs = await api.get('/api/blogs')
-    const id = blogs.body[0].id
+    const blogsAtEnd = await blogsInDb()
 
-    const deletedBlog = await api.delete(`/api/blogs/${id}`)
 
-    expect(deletedBlog.body).toEqual(blogs.body[0])
+    expect(blogsAtEnd.length).toBe(initialBlogs.length - 1)
 
-    const newBlogs = await api.get('/api/blogs')
+    const contents = blogsAtEnd.map((r) => r.title)
 
-    expect(newBlogs.body.length).toBe(blogs.body.length - 1)
+    expect(contents).not.toContain(blogToDelete.title)
+    
   })
 })
 
@@ -201,6 +205,7 @@ describe('when there is initially one user in db', () => {
 
     await api
       .post('/api/users')
+
       .send(newUser)
       .expect(200)
       .expect('Content-Type', /application\/json/)
